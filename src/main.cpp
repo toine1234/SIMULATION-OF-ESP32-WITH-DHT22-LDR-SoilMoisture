@@ -5,20 +5,17 @@
 #include <ESP32Servo.h>
 #include <FastLED.h>
 
+// Defining Pins
 #define DHTPIN 12
 #define LED 26
 #define SERVO_PIN 2
 #define LED_PIN 4
 #define NUM_LEDS 16
-
-#define DHTTYPE    DHT22
-
+#define DHTTYPE DHT22
 #define LDR_PIN 34
-
 #define SOIL_MOISTURE_PIN 35
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
-uint32_t delayMS;
 
 // Servo motor
 Servo servo;
@@ -31,52 +28,50 @@ const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 const char* mqttServer = "broker.hivemq.com";
 const char* clientID = "ESP32-wokwi";
-const char* topic = "Tempdata";
 
-// Parameters for using non-blocking delay
+// Các topic MQTT riêng biệt cho từng loại dữ liệu
+const char* tempTopic = "sensors/temperature";
+const char* humTopic = "sensors/humidity";
+const char* lightTopic = "sensors/light";
+const char* soilTopic = "sensors/soil_moisture";
+
+// Parameters for non-blocking delay
 unsigned long previousMillis = 0;
 const long interval = 10000;
-
-String msgStr = "";
-float temp, hum;
-int lightValue;
-int soilMoistureValue;
 
 // Setting up WiFi and MQTT client
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup_wifi() {
-  Serial.println("Connecting to WiFi.....");
+  Serial.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("\nWiFi connected");
-  Serial.println("\nIP address: ");
+  Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 }
 
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("\nAttempting MQTT connection...");
+    Serial.print("Attempting MQTT connection...");
     if (client.connect(clientID)) {
-      Serial.println("\nMQTT connected");
-      client.subscribe("\nlights");
-      client.subscribe("\nservo");
-      client.subscribe("\nlights/neopixel");
-      Serial.println("\nTopic Subscribed");
-    }
-    else {
+      Serial.println("MQTT connected");
+      client.subscribe("lights");
+      client.subscribe("servo");
+      client.subscribe("lights/neopixel");
+      Serial.println("Topic Subscribed");
+    } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println("\ntry again in 5 seconds");
+      Serial.println(" try again in 5 seconds");
       delay(5000);
     }
   }
 }
-
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived in topic: ");
@@ -88,38 +83,25 @@ void callback(char* topic, byte* payload, unsigned int length) {
     data += (char)payload[i];
   }
   Serial.println();
-  Serial.print("Message size: ");
-  Serial.println(length);
-  Serial.println();
   Serial.println("-----------------------");
-  Serial.println(data);
 
   if (String(topic) == "lights") {
     if (data == "ON") {
-      Serial.println("LED");
       digitalWrite(LED, HIGH);
-    }
-    else {
+      Serial.println("LED is ON");
+    } else {
       digitalWrite(LED, LOW);
+      Serial.println("LED is OFF");
     }
-  }
-  else if (String(topic) == "servo") {
-    int degree = data.toInt(); // Convert the received data to an integer
+  } else if (String(topic) == "servo") {
+    int degree = data.toInt();
     Serial.print("Moving servo to degree: ");
     Serial.println(degree);
-    servo.write(degree); // Move the servo to the specified degree
-  }
-  else if (String(topic) == "lights/neopixel") {
+    servo.write(degree);
+  } else if (String(topic) == "lights/neopixel") {
     int red, green, blue;
-    sscanf(data.c_str(), "%d,%d,%d", &red, &green, &blue); // Parse the received data into RGB values
-    Serial.print("Setting NeoPixel color to (R,G,B): ");
-    Serial.print(red);
-    Serial.print(",");
-    Serial.print(green);
-    Serial.print(",");
-    Serial.println(blue);
-    fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
-    FastLED.show();
+    sscanf(data.c_str(), "%d,%d,%d", &red, &green, &blue);
+    Serial.printf("Setting NeoPixel color to (R,G,B): %d,%d,%d\n", red, green, blue);
     fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
     FastLED.show();
   }
@@ -153,8 +135,8 @@ void loop() {
   }
   client.loop();
 
-  unsigned long currentMillis = millis(); // Read current time
-  if (currentMillis - previousMillis >= interval) { // If current time - last time > 5 sec
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     
     // Read sensor data
@@ -165,7 +147,7 @@ void loop() {
     float temp = isnan(temp_event.temperature) ? -999.0 : temp_event.temperature;
     float hum = isnan(hum_event.relative_humidity) ? -999.0 : hum_event.relative_humidity;
     int lightValue = analogRead(LDR_PIN);
-    int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN); // Đọc giá trị từ chân 35
+    int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN);
 
     // In giá trị ra Serial Monitor
     Serial.printf("Temperature: %.2f C\n", temp);
@@ -182,13 +164,12 @@ void loop() {
       Serial.println("Soil is Wet");
     }
 
-    // Combine and publish data
-    String payload = String(temp) + "," + String(hum) + "," + String(lightValue) + "," + String(soilMoistureValue);
-    
-    if (client.publish(topic, payload.c_str())) {
-      Serial.println("Data published successfully!");
-    } else {
-      Serial.println("Failed to publish data.");
-    }
+    // Gửi dữ liệu lên MQTT với các topic riêng biệt
+    client.publish(tempTopic, String(temp).c_str());
+    client.publish(humTopic, String(hum).c_str());
+    client.publish(lightTopic, String(lightValue).c_str());
+    client.publish(soilTopic, String(soilMoistureValue).c_str());
+
+    Serial.println("Data published successfully to separate topics.");
   }
 }
