@@ -118,17 +118,19 @@ void loop() {
 
     int soilMin = 1000;
     int soilMax = 4000;
-    int soilPercent = 100 - ( (float)(soilMoistureValue - soilMin) / (soilMax - soilMin) ) * 100;
+    int soilPercent =( (float)(soilMoistureValue - soilMin) / (soilMax - soilMin) ) * 100;
     if (soilPercent < 0) soilPercent = 0;
     if (soilPercent > 100) soilPercent = 100;
 
-
     int lightMin = 0;
     int lightMax = 4095;
-    int lightPercent = ( (float)(lightValue - lightMin) / (lightMax - lightMin) ) * 100;
-    if(lightPercent < 0) lightPercent = 0;
-    if(lightPercent > 100) lightPercent = 100;
-
+    int lightPercent = 100 - ( (float)(lightValue - lightMin) / (lightMax - lightMin) ) * 100;
+    if(lightPercent < 0) {
+      lightPercent = 0;
+    }
+    if(lightPercent > 100) {
+      lightPercent = 100;
+    }
 
     // Phân loại độ ẩm đất và điều khiển đèn LED
     if (soilPercent > 70) {
@@ -165,8 +167,8 @@ void loop() {
     // Gửi dữ liệu lên MQTT với các topic riêng biệt
     client.publish(tempTopic, String(temp).c_str());
     client.publish(humTopic, String(hum).c_str());
-    client.publish(lightTopic, String(lightValue).c_str());
-    client.publish(soilTopic, String(soilMoistureValue).c_str());
+    client.publish(lightTopic, String(lightPercent).c_str());
+    client.publish(soilTopic, String(soilPercent).c_str());
 
     Serial.println("Data published successfully to separate topics.");
   }
