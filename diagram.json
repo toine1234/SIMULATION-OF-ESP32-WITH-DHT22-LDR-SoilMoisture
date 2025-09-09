@@ -11,21 +11,6 @@
         "left": -178.2,
         "attrs": { "temperature": "26.2", "humidity": "25" }
         },
-        {
-        "type": "wokwi-led",
-        "id": "led1",
-        "top": -14.57,
-        "left": -66.62,
-        "attrs": { "color": "red" }
-        },
-        {
-        "type": "wokwi-resistor",
-        "id": "r1",
-        "top": 54.1,
-        "left": -66.61,
-        "rotate": 90,
-        "attrs": { "value": "1000" }
-        },
         { "type": "wokwi-servo", "id": "servo1", "top": -30.8, "left": 278.4, "attrs": {} },
         {
         "type": "wokwi-led-ring",
@@ -43,14 +28,6 @@
         [ "dht1:VCC", "esp:3V3", "red", [ "v124.8", "h288", "v-57.6" ] ],
         [ "dht1:GND", "esp:GND.1", "black", [ "v54.36", "h25.56", "v-182.67", "h243.24", "v186.01" ] ],
         [ "dht1:SDA", "esp:D12", "green", [ "v78.36", "h113.52", "v-22.67" ] ],
-        [ "led1:A", "r1:1", "green", [ "v0" ] ],
-        [ "r1:2", "esp:D26", "blue", [ "h23.67", "v-5.97" ] ],
-        [
-        "led1:C",
-        "esp:GND.1",
-        "black",
-        [ "v26.59", "h-18.55", "v-78.43", "h191.83", "v158.81", "h-15.76" ]
-        ],
         [ "servo1:PWM", "esp:D2", "green", [ "h-6.09", "v84.25" ] ],
         [ "servo1:V+", "esp:3V3", "green", [ "h-26.76", "v125.08" ] ],
         [ "servo1:GND", "esp:GND.1", "black", [ "h-13.43", "v121.25" ] ],
@@ -65,4 +42,4 @@
         [ "pot1:SIG", "esp:D35", "green", [ "v38.4", "h66.8", "v-96", "h0.8", "v-220.6" ] ]
     ],
     "dependencies": {}
-}
+    }

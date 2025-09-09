@@ -16,11 +16,7 @@
 #define SOIL_MOISTURE_PIN 35
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
-
-// Servo motor
 Servo servo;
-
-// WS2812 LED strip
 CRGB leds[NUM_LEDS];
 
 // MQTT Credentials
@@ -43,6 +39,7 @@ const long interval = 10000;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+
 void setup_wifi() {
   Serial.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
@@ -55,6 +52,7 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+// Hàm kết nối lại
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -74,37 +72,6 @@ void reconnect() {
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived in topic: ");
-  Serial.println(topic);
-  Serial.print("Message: ");
-  String data = "";
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-    data += (char)payload[i];
-  }
-  Serial.println();
-  Serial.println("-----------------------");
-
-  if (String(topic) == "lights") {
-    if (data == "ON") {
-      digitalWrite(LED, HIGH);
-      Serial.println("LED is ON");
-    } else {
-      digitalWrite(LED, LOW);
-      Serial.println("LED is OFF");
-    }
-  } else if (String(topic) == "servo") {
-    int degree = data.toInt();
-    Serial.print("Moving servo to degree: ");
-    Serial.println(degree);
-    servo.write(degree);
-  } else if (String(topic) == "lights/neopixel") {
-    int red, green, blue;
-    sscanf(data.c_str(), "%d,%d,%d", &red, &green, &blue);
-    Serial.printf("Setting NeoPixel color to (R,G,B): %d,%d,%d\n", red, green, blue);
-    fill_solid(leds, NUM_LEDS, CRGB(red, green, blue));
-    FastLED.show();
-  }
 }
 
 void setup() {
@@ -149,20 +116,51 @@ void loop() {
     int lightValue = analogRead(LDR_PIN);
     int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN);
 
+    int soilMin = 1000;
+    int soilMax = 4000;
+    int soilPercent = 100 - ( (float)(soilMoistureValue - soilMin) / (soilMax - soilMin) ) * 100;
+    if (soilPercent < 0) soilPercent = 0;
+    if (soilPercent > 100) soilPercent = 100;
+
+
+    int lightMin = 0;
+    int lightMax = 4095;
+    int lightPercent = ( (float)(lightValue - lightMin) / (lightMax - lightMin) ) * 100;
+    if(lightPercent < 0) lightPercent = 0;
+    if(lightPercent > 100) lightPercent = 100;
+
+
+    // Phân loại độ ẩm đất và điều khiển đèn LED
+    if (soilPercent > 70) {
+      Serial.println("Soil is Dry. Activating automatic watering and turning ON LED.");
+      digitalWrite(LED, HIGH);
+      servo.write(90);
+      delay(5000);
+      servo.write(0);
+    } else {
+      Serial.println("Soil is Moist/Wet - Turning OFF LED.");
+      digitalWrite(LED, LOW);
+    }
+
+    CRGB color;
+    if(lightPercent > 80){
+      Serial.println("High Light - NeoPixel color : White");
+      color = CRGB::White;
+    }
+    else if (lightPercent > 40){
+      color = CRGB::Yellow;
+    }else{
+      Serial.println("Low Light - NeoPixel color : Blue");
+      color = CRGB::Blue;
+    }
+    fill_solid(leds, NUM_LEDS, color);
+    FastLED.show();
+
     // In giá trị ra Serial Monitor
     Serial.printf("Temperature: %.2f C\n", temp);
     Serial.printf("Humidity: %.2f %%\n", hum);
-    Serial.printf("LDR Value: %d\n", lightValue);
-    Serial.printf("Soil Moisture Value: %d\n", soilMoistureValue);
-
-    // Phân loại độ ẩm đất và điều khiển đèn LED (nếu cần)
-    if (soilMoistureValue > 2000) {
-      Serial.println("Soil is Dry");
-    } else if (soilMoistureValue >= 1000) {
-      Serial.println("Soil is Moist");
-    } else {
-      Serial.println("Soil is Wet");
-    }
+    Serial.printf("LDR Value: %d%%\n", lightPercent);
+    Serial.printf("Soil Moisture Value: %d%%\n", soilPercent);
 
     // Gửi dữ liệu lên MQTT với các topic riêng biệt
     client.publish(tempTopic, String(temp).c_str());
