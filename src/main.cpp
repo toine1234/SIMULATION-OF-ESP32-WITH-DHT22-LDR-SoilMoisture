@@ -98,6 +98,7 @@ const char* soilTopic = "sensors/soil_moisture";
 const char* autoLightTopic = "signal/auto_light";
 const char* autoWateringTopic = "signal/auto_watering";
 const char* SwitchLight = "signal/switch_light";
+const char* LightColor = "signal/light_color";
 
 // Parameters for non-blocking delay
 unsigned long previousMillis = 0;
@@ -152,6 +153,7 @@ void reconnect() {
       client.subscribe(autoLightTopic);
       client.subscribe(autoWateringTopic);
       client.subscribe(SwitchLight);
+      client.subscribe(LightColor);
       Serial.println("Topic Subscribed");
     } else {
       Serial.print("failed, rc=");
@@ -166,6 +168,7 @@ void reconnect() {
 bool autoLightOn = false;
 bool autoWateringOn = false;
 char switchLightState = false;
+char lightColor[10] = "white";
 
 // --- callback nhận dữ liệu ---
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -204,6 +207,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
       switchLightState = false;
       Serial.println("LED turned OFF via MQTT");
     }
+  }
+
+  if (String(topic) == LightColor) {
+    message.toCharArray(lightColor, sizeof(lightColor));
   }
 }
 
@@ -345,7 +352,20 @@ void loop() {
         // Bật tắt đèn LED theo lệnh từ MQTT
         if(switchLightState) {
           digitalWrite(LED, HIGH);
-          fill_solid(leds, NUM_LEDS, CRGB::White);
+          Serial.println(lightColor);
+          if(strcmp(lightColor, "Red") == 0) {
+            fill_solid(leds, NUM_LEDS, CRGB::Red);
+            Serial.println("LED color set to Red via MQTT");
+          } else if(strcmp(lightColor, "Yellow") == 0) {
+            fill_solid(leds, NUM_LEDS, CRGB::Yellow);
+            Serial.println("LED color set to Yellow via MQTT");
+          } else if(strcmp(lightColor, "Blue") == 0) {
+            fill_solid(leds, NUM_LEDS, CRGB::Blue);
+            Serial.println("LED color set to Blue via MQTT");
+          } else {
+            fill_solid(leds, NUM_LEDS, CRGB::White);
+            Serial.println("LED color set to White (default)");
+          }
         } else {
           digitalWrite(LED, LOW);
           fill_solid(leds, NUM_LEDS, CRGB::Black);
