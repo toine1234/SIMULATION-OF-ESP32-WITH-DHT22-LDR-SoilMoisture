@@ -1,45 +1,62 @@
 {
-    "version": 1,
-    "author": "Asim Zulfiqar",
-    "editor": "wokwi",
-    "parts": [
-        { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": -14.5, "left": 4.6, "attrs": {} },
-        {
-        "type": "wokwi-dht22",
-        "id": "dht1",
-        "top": -38.1,
-        "left": -178.2,
-        "attrs": { "temperature": "26.2", "humidity": "25" }
-        },
-        { "type": "wokwi-servo", "id": "servo1", "top": -30.8, "left": 278.4, "attrs": {} },
-        {
-        "type": "wokwi-led-ring",
-        "id": "ring1",
-        "top": -204.16,
-        "left": 133.32,
-        "attrs": { "pixels": "16" }
-        },
-        { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 243.2, "left": 164, "attrs": {} },
-        { "type": "wokwi-potentiometer", "id": "pot1", "top": 248.3, "left": -115.4, "attrs": {} }
-    ],
-    "connections": [
-        [ "esp:TX0", "$serialMonitor:RX", "", [] ],
-        [ "esp:RX0", "$serialMonitor:TX", "", [] ],
-        [ "dht1:VCC", "esp:3V3", "red", [ "v124.8", "h288", "v-57.6" ] ],
-        [ "dht1:GND", "esp:GND.1", "black", [ "v54.36", "h25.56", "v-182.67", "h243.24", "v186.01" ] ],
-        [ "dht1:SDA", "esp:D12", "green", [ "v78.36", "h113.52", "v-22.67" ] ],
-        [ "servo1:PWM", "esp:D2", "green", [ "h-6.09", "v84.25" ] ],
-        [ "servo1:V+", "esp:3V3", "green", [ "h-26.76", "v125.08" ] ],
-        [ "servo1:GND", "esp:GND.1", "black", [ "h-13.43", "v121.25" ] ],
-        [ "ring1:GND", "esp:GND.1", "black", [ "v0" ] ],
-        [ "ring1:VCC", "esp:3V3", "red", [ "v195.2", "h-93.43" ] ],
-        [ "ring1:DIN", "esp:D4", "green", [ "v0" ] ],
-        [ "ldr1:VCC", "esp:3V3", "red", [ "h76.8", "v-67.2", "h-192", "v-48" ] ],
-        [ "ldr1:GND", "esp:GND.1", "black", [ "h86.4", "v-125.2" ] ],
-        [ "ldr1:AO", "esp:D34", "green", [ "h192", "v-327.1", "h-480", "v57.9" ] ],
-        [ "pot1:VCC", "esp:3V3", "red", [ "h66.4", "v-96", "h124.8", "v-76.8" ] ],
-        [ "pot1:GND", "esp:GND.1", "black", [ "v19.2", "h220.8", "v-201.5" ] ],
-        [ "pot1:SIG", "esp:D35", "green", [ "v38.4", "h66.8", "v-96", "h0.8", "v-220.6" ] ]
-    ],
-    "dependencies": {}
+  "version": 1,
+  "author": "Asim Zulfiqar",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": -14.5, "left": 4.6, "attrs": {} },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -258.9,
+      "left": -274.2,
+      "attrs": { "temperature": "26.2", "humidity": "25" }
+    },
+    { "type": "wokwi-servo", "id": "servo1", "top": 84.4, "left": 595.2, "attrs": {} },
+    {
+      "type": "wokwi-led-ring",
+      "id": "ring1",
+      "top": -325.76,
+      "left": 145.19,
+      "attrs": { "pixels": "16" }
+    },
+    {
+      "type": "wokwi-photoresistor-sensor",
+      "id": "ldr1",
+      "top": 377.6,
+      "left": -316,
+      "attrs": {}
+    },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": 133.1, "left": -211.4, "attrs": {} },
+    {
+      "type": "board-ssd1306",
+      "id": "oled1",
+      "top": 291.14,
+      "left": 278.63,
+      "attrs": { "i2cAddress": "0x3c" }
     }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "dht1:VCC", "esp:3V3", "red", [ "v393.6", "h374.4", "v-163.2" ] ],
+    [ "dht1:GND", "esp:GND.1", "black", [ "v38.4", "h345.6", "v182.5" ] ],
+    [ "dht1:SDA", "esp:D12", "green", [ "v78.36", "h0.1", "v123.94" ] ],
+    [ "servo1:PWM", "esp:D2", "green", [ "h-48", "v0.2", "h-230.4", "v-47.3" ] ],
+    [ "servo1:V+", "esp:3V3", "green", [ "h-26.76", "v125.08" ] ],
+    [ "servo1:GND", "esp:GND.1", "black", [ "h-13.43", "v121.25" ] ],
+    [ "ring1:GND", "esp:GND.1", "black", [ "v307.2", "h-95.7" ] ],
+    [ "ring1:VCC", "esp:3V3", "red", [ "v195.2", "h-93.43" ] ],
+    [ "ring1:DIN", "esp:D4", "green", [ "v0" ] ],
+    [ "ldr1:VCC", "esp:3V3", "red", [ "h297.6", "v-220.8", "h0", "v-28.8" ] ],
+    [ "ldr1:GND", "esp:GND.1", "black", [ "h316.8", "v-38.8", "h-66.9" ] ],
+    [ "ldr1:AO", "esp:D34", "green", [ "h134.4", "v-375.1", "h19.2" ] ],
+    [ "pot1:VCC", "esp:3V3", "red", [ "v9.6", "h258.7" ] ],
+    [ "pot1:GND", "esp:GND.1", "black", [ "v57.6", "h288", "v-143.9" ] ],
+    [ "pot1:SIG", "esp:D35", "green", [ "v28.8", "h114.8", "v-201.6", "h19.2" ] ],
+    [ "oled1:VCC", "esp:3V3", "red", [ "h0.15", "v-86.4" ] ],
+    [ "oled1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "oled1:SCL", "esp:D22", "green", [ "v0" ] ],
+    [ "oled1:SDA", "esp:D21", "green", [ "v-249.6", "h-239.93" ] ]
+  ],
+  "dependencies": {}
+}
