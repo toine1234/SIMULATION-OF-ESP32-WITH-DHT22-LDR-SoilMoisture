@@ -94,9 +94,14 @@ const char* humTopic = "sensors/humidity";
 const char* lightTopic = "sensors/light";
 const char* soilTopic = "sensors/soil_moisture";
 
+// các topic lấy dữ liệu
+const char* autoLightTopic = "signal/auto_light";
+const char* autoWateringTopic = "signal/auto_watering";
+const char* SwitchLight = "signal/switch_light";
+
 // Parameters for non-blocking delay
 unsigned long previousMillis = 0;
-const long interval = 10000;
+const long interval = 5000;
 
 // Setting up WiFi and MQTT client
 WiFiClient espClient;
@@ -144,9 +149,9 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...");
     if (client.connect(clientID)) {
       Serial.println("MQTT connected");
-      client.subscribe("lights");
-      client.subscribe("servo");
-      client.subscribe("lights/neopixel");
+      client.subscribe(autoLightTopic);
+      client.subscribe(autoWateringTopic);
+      client.subscribe(SwitchLight);
       Serial.println("Topic Subscribed");
     } else {
       Serial.print("failed, rc=");
@@ -157,13 +162,52 @@ void reconnect() {
   }
 }
 
+// --- khai báo biến toàn cục ---
+bool autoLightOn = false;
+bool autoWateringOn = false;
+char switchLightState = false;
+
+// --- callback nhận dữ liệu ---
 void callback(char* topic, byte* payload, unsigned int length) {
+  String message;
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  
+  Serial.print("Nhận từ topic: ");
+  Serial.println(topic);
+  Serial.print("Nội dung: ");
+  Serial.println(message);
+
+  if (String(topic) == autoLightTopic) {
+    Serial.println(message);
+    if (message == "true") {
+      autoLightOn = true;
+    } else if (message == "false") {
+      autoLightOn = false;
+    }
+  }
+
+  if (String(topic) == autoWateringTopic) {
+    if (message == "true") {
+      autoWateringOn = true;
+    } else if (message == "false") {
+      autoWateringOn = false;
+    }
+  }
+
+  if (String(topic) == SwitchLight) {
+    if (message == "true") {
+      switchLightState = true;
+      Serial.println("LED turned ON via MQTT");
+    } else if (message == "false") {
+      switchLightState = false;
+      Serial.println("LED turned OFF via MQTT");
+    }
+  }
 }
 
-void signalAuto()
-{
-  
-}
+
 
 // --------------------- Hàm setup (cấu hình ban đầu để hoạt động) -----------------
 void setup() {
@@ -279,33 +323,48 @@ void loop() {
     display.display();
     delay(100);
 
+    //------------kiểm tra auto light-----------------------
+      if (autoLightOn) {
+        Serial.println("Auto Light ON - Turning ON LED.");
+    // Điều khiển màu sắc của dải LED WS2812 dựa trên mức độ ánh sáng
+        CRGB color;
+        if(lightPercent > 80){
+          Serial.println("High Light - NeoPixel color : White");
+          color = CRGB::White;
+        }
+        else if (lightPercent > 40){
+          color = CRGB::Yellow;
+        }else{
+          Serial.println("Low Light - NeoPixel color : Blue");
+          color = CRGB::Blue;
+        }
+        fill_solid(leds, NUM_LEDS, color);
+        FastLED.show();
+      } else {
+        Serial.println("Auto Light OFF - Turning OFF LED.");
+        // Bật tắt đèn LED theo lệnh từ MQTT
+        if(switchLightState) {
+          digitalWrite(LED, HIGH);
+          fill_solid(leds, NUM_LEDS, CRGB::White);
+        } else {
+          digitalWrite(LED, LOW);
+          fill_solid(leds, NUM_LEDS, CRGB::Black);
+        }
+        FastLED.show();
+
+      }
+
     //------------Phân loại độ ẩm đất-----------------
     if (soilPercent < 30) {
       Serial.println("Soil is Dry. Activating automatic watering and turning ON LED.");
       digitalWrite(LED, HIGH);
       servo.write(0);
-      delay(5000);
       servo.write(90);
     } else {
       Serial.println("Soil is Moist/Wet - Turning OFF LED.");
       servo.write(90);
       digitalWrite(LED, LOW);
     }
-
-    // Điều khiển màu sắc của dải LED WS2812 dựa trên mức độ ánh sáng
-    CRGB color;
-    if(lightPercent > 80){
-      Serial.println("High Light - NeoPixel color : White");
-      color = CRGB::White;
-    }
-    else if (lightPercent > 40){
-      color = CRGB::Yellow;
-    }else{
-      Serial.println("Low Light - NeoPixel color : Blue");
-      color = CRGB::Blue;
-    }
-    fill_solid(leds, NUM_LEDS, color);
-    FastLED.show();
 
     Serial.println("Data published successfully to separate topics.");
     Serial.println("-----------------------------");
