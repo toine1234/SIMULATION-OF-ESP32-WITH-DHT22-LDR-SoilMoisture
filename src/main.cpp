@@ -96,7 +96,6 @@ const char* soilTopic = "sensors/soil_moisture";
 
 // các topic lấy dữ liệu
 const char* autoLightTopic = "signal/auto_light";
-const char* autoWateringTopic = "signal/auto_watering";
 const char* SwitchLight = "signal/switch_light";
 const char* LightColor = "signal/light_color";
 
@@ -151,7 +150,6 @@ void reconnect() {
     if (client.connect(clientID)) {
       Serial.println("MQTT connected");
       client.subscribe(autoLightTopic);
-      client.subscribe(autoWateringTopic);
       client.subscribe(SwitchLight);
       client.subscribe(LightColor);
       Serial.println("Topic Subscribed");
@@ -188,14 +186,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
       autoLightOn = true;
     } else if (message == "false") {
       autoLightOn = false;
-    }
-  }
-
-  if (String(topic) == autoWateringTopic) {
-    if (message == "true") {
-      autoWateringOn = true;
-    } else if (message == "false") {
-      autoWateringOn = false;
     }
   }
 
@@ -329,6 +319,20 @@ void loop() {
     }
     display.display();
     delay(100);
+    //------------Phân loại độ ẩm đất-----------------
+    if (soilPercent < 30) {
+      Serial.println("Soil is Dry. Activating automatic watering and turning ON LED.");
+      servo.write(0);
+      delay(1000);
+      servo.write(90);
+    } else {
+      Serial.println("Soil is Moist/Wet - Turning OFF LED.");
+      servo.write(90);
+      delay(100);
+    }
+
+    Serial.println("Data published successfully to separate topics.");
+    Serial.println("-----------------------------");
 
     //------------kiểm tra auto light-----------------------
       if (autoLightOn) {
@@ -373,21 +377,6 @@ void loop() {
         FastLED.show();
 
       }
-
-    //------------Phân loại độ ẩm đất-----------------
-    if (soilPercent < 30) {
-      Serial.println("Soil is Dry. Activating automatic watering and turning ON LED.");
-      digitalWrite(LED, HIGH);
-      servo.write(0);
-      servo.write(90);
-    } else {
-      Serial.println("Soil is Moist/Wet - Turning OFF LED.");
-      servo.write(90);
-      digitalWrite(LED, LOW);
-    }
-
-    Serial.println("Data published successfully to separate topics.");
-    Serial.println("-----------------------------");
 
     // Cập nhật hiển thị OLED
     display.clearDisplay();
