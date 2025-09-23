@@ -96,7 +96,9 @@ const char* soilTopic = "sensors/soil_moisture";
 
 // các topic lấy dữ liệu
 const char* autoLightTopic = "signal/auto_light";
+const char* autoWateringTopic = "signal/auto_watering";
 const char* SwitchLight = "signal/switch_light";
+const char* SwitchWatering = "signal/switch_watering";
 const char* LightColor = "signal/light_color";
 
 // Parameters for non-blocking delay
@@ -150,6 +152,8 @@ void reconnect() {
     if (client.connect(clientID)) {
       Serial.println("MQTT connected");
       client.subscribe(autoLightTopic);
+      client.subscribe(autoWateringTopic);
+      client.subscribe(SwitchWatering);
       client.subscribe(SwitchLight);
       client.subscribe(LightColor);
       Serial.println("Topic Subscribed");
@@ -165,6 +169,7 @@ void reconnect() {
 // --- khai báo biến toàn cục ---
 bool autoLightOn = false;
 bool autoWateringOn = false;
+char switchWateringState = false;
 char switchLightState = false;
 char lightColor[10] = "white";
 
@@ -179,6 +184,25 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println(topic);
   Serial.print("Nội dung: ");
   Serial.println(message);
+
+  if (String(topic) == autoWateringTopic) {
+    Serial.println(message);
+    if (message == "true") {
+      autoWateringOn = true;
+    } else if (message == "false") {
+      autoWateringOn = false;
+    }
+  }
+
+  if (String(topic) == SwitchWatering) {
+    if (message == "true") {
+      switchWateringState = true;
+      Serial.println("Manual Watering ON via MQTT");
+    } else if (message == "false") {
+      switchWateringState = false;
+      Serial.println("Manual Watering OFF via MQTT");
+    }
+  }
 
   if (String(topic) == autoLightTopic) {
     Serial.println(message);
@@ -204,137 +228,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-
-
-// --------------------- Hàm setup (cấu hình ban đầu để hoạt động) -----------------
-void setup() {
-  Serial.begin(115200);
-  delay(100);
-
-  // Initialize sensors and components
-  dht.begin();
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
-
-  // Setup servo
-  servo.attach(SERVO_PIN, 500, 2400);
-  servo.write(90);
-
-  // Setup WS2812 LED strip
-  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
-
-  // Setup OLED display
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
-  }
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
-  display.setTextSize(1);
-  display.setCursor(18, 20); display.println(F("Hellooo"));
-  display.setCursor(10, 35); display.println(F("DHT22 + LDR + Soil Moisture"));
-  display.display();
-  delay(1200);
-
-  // Setup WiFi and MQTT
-  setup_wifi();
-  client.setServer(mqttServer, 1883);
-  client.setCallback(callback);
-}
-
-
-// --------------------- Hàm loop (hàm hoạt động hiển thị và lấy dữ liệu) -----------------
-void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
-
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    
-    // Read sensor data
-    sensors_event_t temp_event, hum_event;
-    dht.temperature().getEvent(&temp_event);
-    dht.humidity().getEvent(&hum_event);
-    
-    // Nhiệt độ 
-    float temp = isnan(temp_event.temperature) ? -999.0 : temp_event.temperature;
-    float hum = isnan(hum_event.relative_humidity) ? -999.0 : hum_event.relative_humidity;
-    int lightValue = analogRead(LDR_PIN);
-    int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN);
-
-    // Độ ẩm
-    int soilMin = 1000;
-    int soilMax = 4000;
-    int soilPercent =( (float)(soilMoistureValue - soilMin) / (soilMax - soilMin) ) * 100;
-    if (soilPercent < 0) soilPercent = 0;
-    if (soilPercent > 100) soilPercent = 100;
-
-    // Ánh sáng
-    int lightMin = 0;
-    int lightMax = 4095;
-    int lightPercent = 100 - ( (float)(lightValue - lightMin) / (lightMax - lightMin) ) * 100;
-    if(lightPercent < 0) {
-      lightPercent = 0;
-    }
-    if(lightPercent > 100) {
-      lightPercent = 100;
-    }
-
-    //----------In giá trị ra terminal---------------
-    Serial.printf("Temperature: %.2f C\r\n", temp);
-    Serial.printf("Humidity: %.2f %%\r\n", hum);
-    Serial.printf("LDR Value: %d%%\r\n", lightPercent);
-    Serial.printf("Soil Moisture Value: %d%%\r\n", soilPercent);
-
-    //------------Gửi dữ liệu lên MQTT với các topic riêng biệt-----------
-    client.publish(tempTopic, String(temp).c_str());
-    client.publish(humTopic, String(hum).c_str());
-    client.publish(lightTopic, String(lightPercent).c_str());
-    client.publish(soilTopic, String(soilPercent).c_str());
-
-    //--------Hiển thị dữ liệu lên màn hình----------
-    display.clearDisplay();
-    display.setTextSize(1);
-
-    // Temp
-    display.drawBitmap(0, 0,  icon_temp16,  16, 16, WHITE); display.setCursor(20, 4); display.print("Temp: "); display.print(temp, 1); display.print(" C");
-
-    // Humidity
-    display.drawBitmap(0, 16, icon_humid16, 16, 16, WHITE); display.setCursor(20, 20); display.print("H: "); display.print(hum, 0); display.print(" %");
-
-    // Light
-    display.drawBitmap(0, 32, icon_light16, 16, 16, WHITE); display.setCursor(20, 36); display.print("Light: "); display.print((int)roundf(lightPercent)); display.print(" %");
-
-    // Soil moisture
-    display.drawBitmap(0, 48, icon_soil16, 16, 16, WHITE); display.setCursor(20, 52); display.print("Soil: "); display.print((int)roundf(soilPercent)); display.print(" %");
-    
-    // WiFi status
-    if (WiFi.status() != WL_CONNECTED) {
-      display.drawBitmap(110, 0, wifi_dc, 16, 16, WHITE);
-    } else {
-      display.drawBitmap(110, 0, wifi_icon, 16, 16, WHITE);
-    }
-    display.display();
-    delay(100);
-    //------------Phân loại độ ẩm đất-----------------
-    if (soilPercent < 30) {
-      Serial.println("Soil is Dry. Activating automatic watering and turning ON LED.");
-      servo.write(0);
-      delay(1000);
-      servo.write(90);
-    } else {
-      Serial.println("Soil is Moist/Wet - Turning OFF LED.");
-      servo.write(90);
-      delay(100);
-    }
-
-    Serial.println("Data published successfully to separate topics.");
-    Serial.println("-----------------------------");
-
-    //------------kiểm tra auto light-----------------------
+//------------kiểm tra auto light-----------------------
+void control_light(bool autoLightOn, int lightPercent) {
       if (autoLightOn) {
         Serial.println("Auto Light ON - Turning ON LED.");
     // Điều khiển màu sắc của dải LED WS2812 dựa trên mức độ ánh sáng
@@ -377,6 +272,165 @@ void loop() {
         FastLED.show();
 
       }
+}
+
+//------------Điều kiển tưới nước-----------------------
+void control_watering(bool autoWateringOn, int soilPercent) 
+{
+    if (autoWateringOn)
+      if (soilPercent < 30) {
+      Serial.println("Soil is Dry. Activating automatic watering");
+      servo.write(0);
+      delay(1000);
+      servo.write(90);
+    } else {
+      Serial.println("Soil is Moist/Wet");
+      servo.write(90);
+      delay(100);
+    }
+    else {
+      Serial.println("Auto Watering OFF.");
+      if (switchWateringState) {
+        Serial.println("Manual Watering ON via MQTT");
+        servo.write(0);
+      } else {
+        Serial.println("Manual Watering OFF via MQTT");
+        servo.write(90);
+        delay(100);
+      }
+    }
+
+    Serial.println("Data published successfully to separate topics.");
+    Serial.println("-----------------------------");
+}
+
+//--------------------- Điều khiển màn hình -----------------
+void displayStatus(float temp, float hum, int lightPercent, int soilPercent) 
+{
+    display.clearDisplay();
+    display.setTextSize(1);
+
+    // Temp
+    display.drawBitmap(0, 0,  icon_temp16,  16, 16, WHITE); display.setCursor(20, 4); display.print("Temp: "); display.print(temp, 1); display.print(" C");
+
+    // Humidity
+    display.drawBitmap(0, 16, icon_humid16, 16, 16, WHITE); display.setCursor(20, 20); display.print("H: "); display.print(hum, 0); display.print(" %");
+
+    // Light
+    display.drawBitmap(0, 32, icon_light16, 16, 16, WHITE); display.setCursor(20, 36); display.print("Light: "); display.print((int)roundf(lightPercent)); display.print(" %");
+
+    // Soil moisture
+    display.drawBitmap(0, 48, icon_soil16, 16, 16, WHITE); display.setCursor(20, 52); display.print("Soil: "); display.print((int)roundf(soilPercent)); display.print(" %");
+    
+    // WiFi status
+    if (WiFi.status() != WL_CONNECTED) {
+      display.drawBitmap(110, 0, wifi_dc, 16, 16, WHITE);
+    } else {
+      display.drawBitmap(110, 0, wifi_icon, 16, 16, WHITE);
+    }
+    display.display();
+    delay(100);
+}
+
+// --------------------- Hàm setup (cấu hình ban đầu để hoạt động) -----------------
+void setup() {
+
+  Serial.begin(115200);
+  delay(100);
+
+  // Initialize sensors and components
+  dht.begin();
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, LOW);
+
+  // Setup servo
+  servo.attach(SERVO_PIN, 500, 2400);
+  servo.write(90);
+
+  // Setup WS2812 LED strip
+  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+
+  // Setup OLED display
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(18, 20); display.println(F("Hellooo"));
+  display.setCursor(10, 35); display.println(F("DHT22 + LDR + Soil Moisture"));
+  display.display();
+  delay(1200);
+
+  // Setup WiFi and MQTT
+  setup_wifi();
+  client.setServer(mqttServer, 1883);
+  client.setCallback(callback);
+}
+
+
+// --------------------- Hàm loop (hàm hoạt động hiển thị và lấy dữ liệu) -----------------
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    
+    // Read sensor data
+    sensors_event_t temp_event, hum_event;
+    dht.temperature().getEvent(&temp_event);
+    dht.humidity().getEvent(&hum_event);
+    
+    // Nhiệt độ 
+    float temp = isnan(temp_event.temperature) ? -999.0 : temp_event.temperature;
+    float hum = isnan(hum_event.relative_humidity) ? -999.0 : hum_event.relative_humidity;
+    int lightValue = analogRead(LDR_PIN);
+    int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN);
+    Serial.printf("soilMoistureValue: %d",soilMoistureValue);
+    // Độ ẩm
+    int soilMax = 4095;
+    int soilPercent =( (float)(soilMoistureValue) / (soilMax) ) * 100;
+    if (soilPercent < 0) soilPercent = 0;
+    if (soilPercent > 100) soilPercent = 100;
+
+    // Ánh sáng
+    int lightMin = 0;
+    int lightMax = 4095;
+    int lightPercent = 100 - ( (float)(lightValue - lightMin) / (lightMax - lightMin) ) * 100;
+    if(lightPercent < 0) {
+      lightPercent = 0;
+    }
+    if(lightPercent > 100) {
+      lightPercent = 100;
+    }
+
+    //----------In giá trị ra terminal---------------
+    Serial.printf("Temperature: %.2f C\r\n", temp);
+    Serial.printf("Humidity: %.2f %%\r\n", hum);
+    Serial.printf("LDR Value: %d%%\r\n", lightPercent);
+    Serial.printf("Soil Moisture Value: %d%%\r\n", soilPercent);
+
+    //------------Gửi dữ liệu lên MQTT với các topic riêng biệt-----------
+    client.publish(tempTopic, String(temp).c_str());
+    client.publish(humTopic, String(hum).c_str());
+    client.publish(lightTopic, String(lightPercent).c_str());
+    client.publish(soilTopic, String(soilPercent).c_str());
+
+    //--------Hiển thị dữ liệu lên màn hình----------
+    displayStatus(temp, hum, lightPercent, soilPercent);
+
+    //------------Phân loại độ ẩm đất-----------------
+    control_watering(autoWateringOn,soilPercent);
+
+    //------------điều kiển đèn-----------------------
+    control_light(autoLightOn, lightPercent);
+
 
     // Cập nhật hiển thị OLED
     display.clearDisplay();

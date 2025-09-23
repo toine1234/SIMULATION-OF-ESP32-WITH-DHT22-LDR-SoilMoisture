@@ -153,7 +153,7 @@
         "z": "559f5585027ed238",
         "name": "Độ ẩm đất (Soil Moisture)",
         "group": "47427761975461f8",
-        "order": 1,
+        "order": 3,
         "value": "payload",
         "valueType": "msg",
         "width": "6",
@@ -270,7 +270,7 @@
         "group": "47427761975461f8",
         "name": "Soil Moisture",
         "label": "Soil Moisture",
-        "order": 2,
+        "order": 4,
         "chartType": "line",
         "category": "topic",
         "categoryType": "msg",
@@ -610,7 +610,7 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 930,
+        "x": 1230,
         "y": 540,
         "wires": [
             [
@@ -632,7 +632,7 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1210,
+        "x": 1510,
         "y": 540,
         "wires": []
     },
@@ -674,7 +674,7 @@
         "className": "",
         "typeIsComboBox": false,
         "msgTrigger": "onChange",
-        "x": 930,
+        "x": 1230,
         "y": 600,
         "wires": [
             [
@@ -696,7 +696,7 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1210,
+        "x": 1510,
         "y": 600,
         "wires": []
     },
@@ -705,7 +705,7 @@
         "type": "mqtt in",
         "z": "559f5585027ed238",
         "name": "",
-        "topic": "signal/light_color",
+        "topic": "signal/switch_watering",
         "qos": "2",
         "datatype": "auto-detect",
         "broker": "072c83ebfbeba6f6",
@@ -713,8 +713,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 940,
-        "y": 680,
+        "x": 1100,
+        "y": 1180,
         "wires": [
             [
                 "7db5113b54807e35"
@@ -725,7 +725,7 @@
         "id": "7db5113b54807e35",
         "type": "debug",
         "z": "559f5585027ed238",
-        "name": "Màu",
+        "name": "bật tắt",
         "active": true,
         "tosidebar": true,
         "console": false,
@@ -734,8 +734,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1210,
-        "y": 680,
+        "x": 1470,
+        "y": 1180,
         "wires": []
     },
     {
@@ -750,12 +750,137 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 720,
+        "x": 1020,
         "y": 540,
         "wires": [
             [
                 "854ef51ccbe53d2d",
                 "b7e377099d43a00c"
+            ]
+        ]
+    },
+    {
+        "id": "b80c5dad265011c9",
+        "type": "ui-switch",
+        "z": "559f5585027ed238",
+        "name": "Automatic Watering",
+        "label": "Automatic Light Mode",
+        "group": "47427761975461f8",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": false,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-left",
+        "clickableArea": "switch",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 750,
+        "y": 900,
+        "wires": [
+            [
+                "3760f8e25d802ac4",
+                "87671c18098e584c"
+            ]
+        ]
+    },
+    {
+        "id": "3760f8e25d802ac4",
+        "type": "mqtt out",
+        "z": "559f5585027ed238",
+        "name": "",
+        "topic": "signal/auto_watering",
+        "qos": "2",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "072c83ebfbeba6f6",
+        "x": 1040,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "fd21c46e4de52537",
+        "type": "mqtt out",
+        "z": "559f5585027ed238",
+        "name": "",
+        "topic": "signal/switch_watering",
+        "qos": "2",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "072c83ebfbeba6f6",
+        "x": 1500,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "87671c18098e584c",
+        "type": "function",
+        "z": "559f5585027ed238",
+        "name": "function 2",
+        "func": "// nếu bật auto thì disable widget\nif (msg.payload === true) {\n    msg.enabled = false;   // khoá widget\n} else {\n    msg.enabled = true;  // mở widget\n}\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 1000,
+        "wires": [
+            [
+                "5c0fb657488a1dbb"
+            ]
+        ]
+    },
+    {
+        "id": "5c0fb657488a1dbb",
+        "type": "ui-switch",
+        "z": "559f5585027ed238",
+        "name": "Switch Watering",
+        "label": "Watering Switch",
+        "group": "47427761975461f8",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": false,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-left",
+        "clickableArea": "switch",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 1240,
+        "y": 1000,
+        "wires": [
+            [
+                "fd21c46e4de52537"
             ]
         ]
     },
@@ -939,7 +1064,7 @@
         }
     },
     {
-        "id": "fbe532c02d4bf731",
+        "id": "5b02397421f8ccee",
         "type": "global-config",
         "env": [],
         "modules": {
