@@ -1,4 +1,0 @@
-trên giao điện sẽ có nút auto:
-- Nếu click auto sẽ thiết bị sẽ tự động các chức năng.
-- Nếu không click auto sẽ hoạt động theo ý muốn.
-- Ngoài ra khi chọn đèn sẽ có chức năng như chọn màu và độ sáng theo mức độ mong muốn.
