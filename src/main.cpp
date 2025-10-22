@@ -11,6 +11,8 @@
 
 // define chân kết nối cảm biến và các thiết bị khác
 #define DHTPIN 12
+#define LED_DHT 33
+#define BUZZER_PIN 32
 #define LED 26
 #define SERVO_PIN 2
 #define LED_PIN 4
@@ -18,6 +20,11 @@
 #define DHTTYPE DHT22
 #define LDR_PIN 34
 #define SOIL_MOISTURE_PIN 35
+
+// Khai báo đối tượng thiết bị 
+DHT_Unified dht(DHTPIN, DHTTYPE);
+Servo servo;
+CRGB leds[NUM_LEDS];
 
 // màn hình OLED
 #define SCREEN_WIDTH 128
@@ -77,10 +84,6 @@ const unsigned char Update_NOK [] PROGMEM = {
   0x01,0x80,0x06,0x70,0x08,0x08,0x10,0x10,0x20,0x20,0x44,0x44,0x82,0x82,0x82,0x82,
   0x82,0x82,0x44,0x44,0x20,0x20,0x10,0x10,0x08,0x08,0x06,0x70,0x01,0x80,0x00,0x00
 };
-// 
-DHT_Unified dht(DHTPIN, DHTTYPE);
-Servo servo;
-CRGB leds[NUM_LEDS];
 
 // MQTT Credentials
 const char* ssid = "Wokwi-GUEST";
@@ -100,6 +103,13 @@ const char* autoWateringTopic = "signal/auto_watering";
 const char* SwitchLight = "signal/switch_light";
 const char* SwitchWatering = "signal/switch_watering";
 const char* LightColor = "signal/light_color";
+
+// --- khai báo biến toàn cục ---
+bool autoLightOn = false;
+bool autoWateringOn = false;
+char switchWateringState = false;
+char switchLightState = false;
+char lightColor[10] = "white";
 
 // Parameters for non-blocking delay
 unsigned long previousMillis = 0;
@@ -166,13 +176,6 @@ void reconnect() {
   }
 }
 
-// --- khai báo biến toàn cục ---
-bool autoLightOn = false;
-bool autoWateringOn = false;
-char switchWateringState = false;
-char switchLightState = false;
-char lightColor[10] = "white";
-
 // --- callback nhận dữ liệu ---
 void callback(char* topic, byte* payload, unsigned int length) {
   String message;
@@ -225,6 +228,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   if (String(topic) == LightColor) {
     message.toCharArray(lightColor, sizeof(lightColor));
+  }
+}
+
+// --------------------- Hàm Báo động quá nhiệt -----------------
+void alert_overheat(float temperature) {
+  if (temperature > 35.0) {
+    Serial.println("Temperature exceeds threshold! Activating alert.");
+    digitalWrite(LED_DHT, HIGH);
+    digitalWrite(BUZZER_PIN, HIGH);
+    tone(BUZZER_PIN,600);
+  } else {
+    digitalWrite(LED_DHT, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
   }
 }
 
@@ -304,6 +320,7 @@ void control_watering(bool autoWateringOn, int soilPercent)
     Serial.println("-----------------------------");
 }
 
+
 //--------------------- Điều khiển màn hình -----------------
 void displayStatus(float temp, float hum, int lightPercent, int soilPercent) 
 {
@@ -340,6 +357,8 @@ void setup() {
 
   // Initialize sensors and components
   dht.begin();
+  pinMode(LED_DHT, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LED, OUTPUT);
   digitalWrite(LED, LOW);
 
@@ -392,7 +411,7 @@ void loop() {
     float hum = isnan(hum_event.relative_humidity) ? -999.0 : hum_event.relative_humidity;
     int lightValue = analogRead(LDR_PIN);
     int soilMoistureValue = analogRead(SOIL_MOISTURE_PIN);
-    Serial.printf("soilMoistureValue: %d",soilMoistureValue);
+
     // Độ ẩm
     int soilMax = 4095;
     int soilPercent =( (float)(soilMoistureValue) / (soilMax) ) * 100;
@@ -430,7 +449,9 @@ void loop() {
 
     //------------điều kiển đèn-----------------------
     control_light(autoLightOn, lightPercent);
-
+    
+    //------------Báo động quá nhiệt-----------------------
+    alert_overheat(temp);
 
     // Cập nhật hiển thị OLED
     display.clearDisplay();
