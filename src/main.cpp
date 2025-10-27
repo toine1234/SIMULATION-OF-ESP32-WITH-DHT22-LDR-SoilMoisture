@@ -236,11 +236,10 @@ void alert_overheat(float temperature) {
   if (temperature > 35.0) {
     Serial.println("Temperature exceeds threshold! Activating alert.");
     digitalWrite(LED_DHT, HIGH);
-    digitalWrite(BUZZER_PIN, HIGH);
-    tone(BUZZER_PIN,600);
+    ledcWriteTone(5, 600);
   } else {
     digitalWrite(LED_DHT, LOW);
-    digitalWrite(BUZZER_PIN, LOW);
+    ledcWriteTone(5, 0);
   }
 }
 
@@ -320,7 +319,6 @@ void control_watering(bool autoWateringOn, int soilPercent)
     Serial.println("-----------------------------");
 }
 
-
 //--------------------- Điều khiển màn hình -----------------
 void displayStatus(float temp, float hum, int lightPercent, int soilPercent) 
 {
@@ -365,6 +363,10 @@ void setup() {
   // Setup servo
   servo.attach(SERVO_PIN, 500, 2400);
   servo.write(90);
+
+  // Setup buzzer
+  ledcSetup(5, 2000, 8); // tần số 2kHz, độ phân giải 8 bit
+  ledcAttachPin(BUZZER_PIN, 5);
 
   // Setup WS2812 LED strip
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
