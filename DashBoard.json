@@ -43,7 +43,7 @@
         "rh": 0,
         "inputs": 0,
         "x": 90,
-        "y": 560,
+        "y": 400,
         "wires": [
             [
                 "d42802459fd76572",
@@ -65,8 +65,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 100,
-        "y": 960,
+        "x": 120,
+        "y": 680,
         "wires": [
             [
                 "27f4ae2dd53675f1",
@@ -142,7 +142,7 @@
         "styleGlow": false,
         "className": "",
         "x": 320,
-        "y": 560,
+        "y": 400,
         "wires": [
             []
         ]
@@ -195,8 +195,8 @@
         "styleRounded": true,
         "styleGlow": false,
         "className": "",
-        "x": 330,
-        "y": 960,
+        "x": 350,
+        "y": 680,
         "wires": [
             []
         ]
@@ -319,8 +319,8 @@
         "height": 8,
         "className": "",
         "interpolation": "linear",
-        "x": 290,
-        "y": 1000,
+        "x": 310,
+        "y": 720,
         "wires": [
             []
         ]
@@ -458,7 +458,7 @@
         "className": "",
         "interpolation": "linear",
         "x": 290,
-        "y": 600,
+        "y": 440,
         "wires": [
             []
         ]
@@ -494,7 +494,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 300,
-        "y": 520,
+        "y": 360,
         "wires": []
     },
     {
@@ -527,8 +527,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 290,
-        "y": 920,
+        "x": 310,
+        "y": 640,
         "wires": []
     },
     {
@@ -557,8 +557,8 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 760,
-        "y": 440,
+        "x": 640,
+        "y": 380,
         "wires": [
             [
                 "9b51ab7a0a3ea9b8",
@@ -580,8 +580,8 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1020,
-        "y": 440,
+        "x": 900,
+        "y": 380,
         "wires": []
     },
     {
@@ -610,8 +610,8 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 1230,
-        "y": 540,
+        "x": 1110,
+        "y": 480,
         "wires": [
             [
                 "d1a9209d9edee28d"
@@ -632,8 +632,8 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1510,
-        "y": 540,
+        "x": 1390,
+        "y": 480,
         "wires": []
     },
     {
@@ -674,8 +674,8 @@
         "className": "",
         "typeIsComboBox": false,
         "msgTrigger": "onChange",
-        "x": 1230,
-        "y": 600,
+        "x": 1110,
+        "y": 540,
         "wires": [
             [
                 "ab6ac1ef86f1e66f"
@@ -696,46 +696,8 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1510,
-        "y": 600,
-        "wires": []
-    },
-    {
-        "id": "c31c2c84de780f96",
-        "type": "mqtt in",
-        "z": "559f5585027ed238",
-        "name": "",
-        "topic": "signal/switch_watering",
-        "qos": "2",
-        "datatype": "auto-detect",
-        "broker": "072c83ebfbeba6f6",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 1100,
-        "y": 1180,
-        "wires": [
-            [
-                "7db5113b54807e35"
-            ]
-        ]
-    },
-    {
-        "id": "7db5113b54807e35",
-        "type": "debug",
-        "z": "559f5585027ed238",
-        "name": "bật tắt",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1470,
-        "y": 1180,
+        "x": 1390,
+        "y": 540,
         "wires": []
     },
     {
@@ -750,8 +712,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1020,
-        "y": 540,
+        "x": 900,
+        "y": 480,
         "wires": [
             [
                 "854ef51ccbe53d2d",
@@ -764,7 +726,7 @@
         "type": "ui-switch",
         "z": "559f5585027ed238",
         "name": "Automatic Watering",
-        "label": "Automatic Light Mode",
+        "label": "Automatic Watering Mode",
         "group": "47427761975461f8",
         "order": 1,
         "width": 0,
@@ -785,8 +747,8 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 750,
-        "y": 900,
+        "x": 650,
+        "y": 640,
         "wires": [
             [
                 "3760f8e25d802ac4",
@@ -808,8 +770,8 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1040,
-        "y": 900,
+        "x": 940,
+        "y": 640,
         "wires": []
     },
     {
@@ -826,8 +788,8 @@
         "correl": "",
         "expiry": "",
         "broker": "072c83ebfbeba6f6",
-        "x": 1500,
-        "y": 1000,
+        "x": 1400,
+        "y": 740,
         "wires": []
     },
     {
@@ -842,8 +804,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1000,
-        "y": 1000,
+        "x": 900,
+        "y": 740,
         "wires": [
             [
                 "5c0fb657488a1dbb"
@@ -876,8 +838,8 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 1240,
-        "y": 1000,
+        "x": 1140,
+        "y": 740,
         "wires": [
             [
                 "fd21c46e4de52537"
@@ -1064,7 +1026,7 @@
         }
     },
     {
-        "id": "5b02397421f8ccee",
+        "id": "226e8f8ddcd94fcb",
         "type": "global-config",
         "env": [],
         "modules": {
